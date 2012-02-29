@@ -1,3 +1,26 @@
+Building and Installation:
+
+$ cd /home/zilvinas/carambola/
+$ cd packages
+$ git clone git://github.com/8devices/mmio.git
+$ cd /home/zilvinas/carambola/
+$ make oldconfig
+Collecting package info: done
+...
+mmio..................Memory Mapped I/O (PACKAGE_mmio) [N/m/y/?] (NEW)
+...
+
+You can choose either Y (makes part of image) or M (a separate package).
+
+$ make
+
+Or
+
+$ make package/mmio/compile
+$ make package/mmio/install
+
+Final package is located under bin/ramips/packages/mmio_1_ramips.ipk.
+
 Usage:
 
 mmio [options] <address>[@<range>] (1)
