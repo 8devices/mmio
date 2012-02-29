@@ -1,0 +1,23 @@
+#
+# Copyright (C) 2012 Žilvinas Valinskas
+# See LICENSE for more information.
+#
+
+CFLAGS	+= -Wall -Os
+
+all:	mmio
+
+utils.o: utils.c
+	$(CC) $(CFLAGS) -c utils.c -o utils.o
+
+mmio.o: mmio.c
+	$(CC) $(CFLAGS) -c mmio.c -o mmio.o
+
+strbuf.o : strbuf.c
+	$(CC) $(CFLAGS) -c strbuf.c -o strbuf.o
+
+mmio: mmio.o utils.o strbuf.o
+	$(CC) $(LDFLAGS) -o mmio mmio.o utils.o strbuf.o $(LDLIBS)
+
+clean:
+	rm -f *.o mmio
