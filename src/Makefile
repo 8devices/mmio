@@ -17,7 +17,7 @@ strbuf.o : strbuf.c
 	$(CC) $(CFLAGS) -c strbuf.c -o strbuf.o
 
 mmio: mmio.o utils.o strbuf.o
-	$(CC) $(LDFLAGS) -o mmio mmio.o utils.o strbuf.o $(LDLIBS)
+	$(CC) $(LDFLAGS) -o mmio mmio.o utils.o strbuf.o $(LIBS)
 
 clean:
 	rm -f *.o mmio
