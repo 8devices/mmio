@@ -157,7 +157,7 @@ static void mmio_parse(struct mmio_options *mo, int argc, char *argv[])
 			break;
 
 		case 'b':
-			mo->flags = HEXDUMP_ASCII|HEXDUMP_8BIT;
+			mo->flags = HEXDUMP_8BIT;
 			break;
 
 		case 'h':
