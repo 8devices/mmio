@@ -5,7 +5,7 @@
 
 CFLAGS	+= -Wall -Os
 
-all:	mmio
+all:	mmio rtscts
 
 libmmio.o: libmmio.c
 	$(CC) $(CFLAGS) -c libmmio.c -o libmmio.o
@@ -22,6 +22,9 @@ strbuf.o : strbuf.c
 mmio: mmio.o utils.o strbuf.o libmmio.o
 	$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
 
+rtscts: rtscts.o utils.o strbuf.o libmmio.o
+	$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
+
 clean:
-	rm -f *.o mmio
+	rm -f *.o mmio rtscts
 	rm -f tags cscope.*
