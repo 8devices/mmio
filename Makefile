@@ -37,6 +37,7 @@ endef
 define Package/mmio/install
 	$(INSTALL_DIR) $(1)/usr/sbin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/mmio $(1)/usr/sbin/mmio
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/rtscts $(1)/usr/sbin/rtscts
 endef
 
 $(eval $(call BuildPackage,mmio))
