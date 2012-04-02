@@ -17,6 +17,19 @@
 #include "mmio.h"
 #include "utils.h"
 
+struct mmio_options
+{
+	struct 		mmio		io;
+
+	uint32_t	value;		/* 32 bit values only, for now. */
+	uint32_t	flags;
+
+	int		verbose;
+	int		ascii;		/* print ASCII */
+	int		forced;
+	int		mode;		/* 0 - read, 1 - write */
+};
+
 static const char *usage =
 "mmio [options] <address>[@<range>] (1)\n"
 "mmio [options] <address> <value>   (2)\n"
@@ -30,71 +43,6 @@ static const char *usage =
 "\n"
 "(1) dumps specified memory range\n"
 "(2) writes specified value to address\n";
-
-void mmio_hexdump(const struct mmio_options *mo, size_t flags)
-{
-	__hexdump(mo->iobase + mo->offset,
-		  mo->iomem + mo->offset,
-		  mo->range * 4, flags);
-}
-
-static void mmio_normalize(struct mmio_options *mo)
-{
-	int npages = 0;
-
-	mo->iobase += mo->offset;
-	mo->offset = mo->iobase & (getpagesize() - 1);
-	mo->iobase = mo->iobase & ~(getpagesize() - 1);
-
-	npages += (mo->range * sizeof(uint32_t)) / getpagesize();
-	npages += 1;
-	mo->iosize = npages * getpagesize();
-}
-
-void mmio_init(struct mmio_options *mo)
-{
-	char *device;
-	int iofd;
-
-	if (!mo->kmem)
-		device = "/dev/mem";
-	else
-		device = "/dev/kmem";
-
-	iofd = open(device, O_RDWR);
-	if (iofd < 0)
-		die_errno("open() failed");
-
-	mo->iomem = mmap(NULL, mo->iosize,
-			 PROT_READ|PROT_WRITE,
-			 MAP_SHARED,
-			 iofd, mo->iobase);
-
-	if (mo->iomem == MAP_FAILED)
-		die_errno("can't map @ %0lX", mo->iobase);
-
-	close(iofd);
-}
-
-int mmio_map(struct mmio_options *mo, unsigned long base, size_t length)
-{
-	mo->iobase = base;
-	mo->offset = 0;
-	mo->range  = length;
-
-	mmio_normalize(mo);
-	mmio_init(mo);
-
-	return 0;
-}
-
-void mmio_cleanup(struct mmio_options *mo)
-{
-	if (munmap(mo->iomem, mo->iosize))
-		die_errno("can't unmap @ %lX", mo->iobase);
-}
-
-
 
 static void mmio_usage(const char *msg)
 {
@@ -133,7 +81,7 @@ static void mmio_check(struct mmio_options *mo,
 		mo->mode = 0;
 	}
 
-	mmio_map(mo, iobase, range);
+	mmio_map(&mo->io, iobase, range);
 }
 
 static void mmio_parse(struct mmio_options *mo, int argc, char *argv[])
@@ -141,7 +89,7 @@ static void mmio_parse(struct mmio_options *mo, int argc, char *argv[])
 	int   count;
 
 	memset(mo, 0, sizeof(*mo));
-	mo->range = 1;
+	mo->io.range = 1;
 	mo->flags = HEXDUMP_32BIT;
 
 	for (;;) {
@@ -169,7 +117,7 @@ static void mmio_parse(struct mmio_options *mo, int argc, char *argv[])
 			break;
 
 		case 'k':
-			mo->kmem = 1;
+			mo->io.kmem = 1;
 			break;
 
 		default:
@@ -191,17 +139,18 @@ static void mmio_parse(struct mmio_options *mo, int argc, char *argv[])
 
 static void mmio_read(struct mmio_options *mo)
 {
-	mmio_hexdump(mo, mo->flags);
+	struct mmio *io = &mo->io;
+	mmio_hexdump(io, io->range*4, mo->flags);
 }
 
 static void mmio_write(struct mmio_options *mo)
 {
 	uint32_t data;
 
-	writel(mo->value, mo->iomem + mo->offset);
-	printf("W@ %08lX: %08X\n", mo->iobase + mo->offset, mo->value);
+	mmio_writel(&mo->io, 0, mo->value);
+	printf("W@ %08lX: %08X\n", mo->io.iobase + mo->io.offset, mo->value);
 
-	data = readl(mo->iomem + mo->offset);
+	data = mmio_readl(&mo->io, 0);
 	if (data != mo->value)
 		printf("Wrote %08X and read again %08X, r/o register ?\n",
 		       mo->value, data);
@@ -216,6 +165,11 @@ static void mmio_run(struct mmio_options *mo)
 	} else {
 		die("Unknown MMIO mode:%d\n", mo->mode);
 	}
+}
+
+static void mmio_cleanup(struct mmio_options *mo)
+{
+	mmio_unmap(&mo->io);
 }
 
 int main(int argc, char *argv[])
