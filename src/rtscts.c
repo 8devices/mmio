@@ -31,6 +31,7 @@ timespec_from_ms(struct timespec *ts, unsigned long ms)
 
 int main(int argc, char *argv[])
 {
+	char chip[16];
 	int period;
 	uint32_t magic1, magic2;
 	struct mmio io;
@@ -45,10 +46,18 @@ int main(int argc, char *argv[])
 	if (mmio_map(&io, 0x10000000, 0x1000))
 		die_errno("mmio_map() failed");
 
-	magic1 = mmio_readl(&io, 0x0);
-	magic2 = mmio_readl(&io, 0x4);
+	memset(chip, 0, sizeof(chip));
 
-	if (magic1 != 0x30335452 || magic2 != 0x20203235)
+	magic1 = mmio_readl(&io, 0x0);
+	memcpy(chip + 0, &magic1, sizeof(magic1));
+
+	magic2 = mmio_readl(&io, 0x4);
+	memcpy(chip + 4, &magic2, sizeof(magic2));
+
+	if (strncmp(chip, "RT3050  ", 8) != 0 &&
+	    strncmp(chip, "RT3052  ", 8) != 0 &&
+	    strncmp(chip, "RT3350  ", 8) != 0 &&
+	    strncmp(chip, "RT3352  ", 8) != 0)
 		die("unknown chip: %08X/%08X", magic1, magic2);
 
 	mmio_unmap(&io);
