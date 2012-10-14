@@ -28,6 +28,19 @@ static void hexdump_eol(void)
 	printf("\n");
 }
 
+static void hexdump_bin(const void *data, size_t length, size_t count)
+{
+	uint32_t v = *((uint32_t*)data);
+	int shift, i;
+
+	for (i = 1, shift = 31; shift >= 0; ++i, -- shift) {
+		printf("%c", ((v >> shift) & 1) ? '1' : '0');
+
+		if ((i % 8) == 0)
+			printf(" ");
+	}
+}
+
 static void hexdump_8bit(const void *data, size_t length, size_t count)
 {
 	const unsigned char *ptr = data;
@@ -100,18 +113,24 @@ void __hexdump(unsigned long base, const void *data,
 	count = HEXDUMP_COUNT(flags);
 	if (count == 0)
 		count = 16;	/* default */
+
 	if (count > 32)
 		count = 32;	/* max allowed */
 
 	if ((flags & HEXDUMP_SIZEMASK) == 0)
 		flags |= HEXDUMP_8BIT;
 
+	if (HEXDUMP_ISSET(flags, HEXDUMP_BIN))
+		count = 4;
+
 	while (length > 0) {
 		nleft = length > count ? count : length;
 
 		hexdump_addr(base);
 
-		if (HEXDUMP_ISSET(flags, HEXDUMP_8BIT)) {
+		if (HEXDUMP_ISSET(flags, HEXDUMP_BIN)) {
+			hexdump_bin(data, nleft, count);
+		} else if (HEXDUMP_ISSET(flags, HEXDUMP_8BIT)) {
 			hexdump_8bit(data, nleft, count);
 		} else if (HEXDUMP_ISSET(flags, HEXDUMP_16BIT)) {
 			hexdump_16bit(data, nleft, count);

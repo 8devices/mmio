@@ -38,6 +38,7 @@ static const char *usage =
 " -a   - 8bit hex + ascii output\n"
 " -b   - 8bit hex output\n"
 " -h   - 16bit hex output\n"
+" -n   - 32bit binary output\n"
 " -x   - 32bit hex output\n"
 " -k   - use /dev/kmem instead of /dev/mem (default)\n"
 "\n"
@@ -95,7 +96,7 @@ static void mmio_parse(struct mmio_options *mo, int argc, char *argv[])
 	for (;;) {
 		int ch;
 
-		ch = getopt(argc, argv, "abhxk");
+		ch = getopt(argc, argv, "abhnxk");
 		if (ch == -1)
 			break;
 
@@ -110,6 +111,10 @@ static void mmio_parse(struct mmio_options *mo, int argc, char *argv[])
 
 		case 'h':
 			mo->flags = HEXDUMP_16BIT;
+			break;
+
+		case 'n':
+			mo->flags = HEXDUMP_BIN;
 			break;
 
 		case 'x':

@@ -30,6 +30,7 @@ OPTIONS:
  -a   - 8bit hex + ascii output
  -b   - 8bit hex output
  -h   - 16bit hex output
+ -n   - 32bit binary output
  -x   - 32bit hex output
  -k   - use /dev/kmem instead of /dev/mem (default)
 
@@ -94,3 +95,9 @@ Dumping memory:
 100000D0: 0000 0000 0000 0000 0000 0000 0000 0000
 100000E0: 0000 0000 0000 0000 0000 0000 0000 0000
 100000F0: 0000 0000 0000 0000 0000 0000 0000 0000
+
+# /tmp/mmio -n 0x10000000@1
+10000000: 00110000 00110011 01010100 01010010
+          ^      ^                   ^      ^-- bit 0
+          |      - bit 24            |
+          +- 31                      +-- bit 7
